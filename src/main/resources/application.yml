@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:6436/ordershop01
+    username: test1
+    password: 1234
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 4
+
+  jpa:
+    hibernate.dialect: org.hibernate.dialect.PostgreSQLdialect
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        format_sql: true
+    database: postgresql
+
+logging.level:
+  org.hibernate.sql: debug # console\uC560 \uB0A8\uAE30\uC9C0 \uC54A\uACE0 log \uD30C\uC77C\uC5D0 \uB0A8\uAE34\uB2E4.
