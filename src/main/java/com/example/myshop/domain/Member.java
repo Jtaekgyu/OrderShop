@@ -12,13 +12,15 @@ import java.util.List;
 @Entity
 @Getter
 @NoArgsConstructor
-public class Member {
+public class Member extends TimeStamped{
 
     @Id @GeneratedValue
     @Column(name = "member_id")
     private Long id;
 
     private String name;
+
+    private boolean isVerified;
 
     @Embedded // jpa 내장타입 - 새로운 값 타입을 직접 정의해서 사용할 수 있다. 이것을 Embedded 타입이라고 한다.
     private Address address;
@@ -28,7 +30,8 @@ public class Member {
     private List<Order> orders = new ArrayList<>();
 
     @Builder
-    public Member(String name){
+    public Member(String name, Address address){
         this.name = name;
+        this.address = address;
     }
 }
