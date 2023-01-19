@@ -20,7 +20,7 @@ public class Member extends TimeStamped{
 
     private String name;
 
-    private boolean isVerified;
+    private Boolean verified;
 
     @Embedded // jpa 내장타입 - 새로운 값 타입을 직접 정의해서 사용할 수 있다. 이것을 Embedded 타입이라고 한다.
     private Address address;
@@ -30,8 +30,13 @@ public class Member extends TimeStamped{
     private List<Order> orders = new ArrayList<>();
 
     @Builder
-    public Member(String name, Address address){
+    public Member(String name, Boolean verified, Address address){
         this.name = name;
-        this.address = address;
+        this.verified = verified;
+        this.address = Address.builder()
+                .city(address.getCity())
+                .street(address.getStreet())
+                .zipcode(address.getZipcode())
+                .build();
     }
 }
