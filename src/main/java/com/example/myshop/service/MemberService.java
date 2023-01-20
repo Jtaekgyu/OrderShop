@@ -10,5 +10,5 @@ public interface MemberService {
 
     MemberResDto join(MemberJoinReqDto reqDto);
 
-//    List<MemberResDto> memberList();
+    List<MemberResDto> memberList();
 }

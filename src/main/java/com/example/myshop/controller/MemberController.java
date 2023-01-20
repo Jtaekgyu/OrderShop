@@ -23,8 +23,8 @@ public class MemberController {
         return Response.success(resDto);
     }
 
-//    @GetMapping
-//    public Response<List<MemberResDto>> memberList(){
-//        return Response.success(memberService.memberList());
-//    }
+    @GetMapping
+    public Response<List<MemberResDto>> memberList(){
+        return Response.success(memberService.memberList());
+    }
 }
