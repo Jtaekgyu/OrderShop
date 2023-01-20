@@ -9,6 +9,6 @@ import java.util.List;
 public interface MemberService {
 
     MemberResDto join(MemberJoinReqDto reqDto);
-
     List<MemberResDto> memberList();
+    List<MemberResDto> verifiedMemberList();
 }

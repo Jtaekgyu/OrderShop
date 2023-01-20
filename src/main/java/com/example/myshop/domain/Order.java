@@ -33,5 +33,4 @@ public class Order extends TimeStamped{
     @Enumerated(EnumType.STRING) // 만약에 EnumType 이 ORDINAL 이면 새로운 타입이 추가 되면 숫자가 꼬여서 반드시 STRING으로 해야한다.
     private OrderStatus status;
 
-//    private LocalDateTime orderDate;
 }

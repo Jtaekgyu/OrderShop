@@ -27,4 +27,9 @@ public class MemberController {
     public Response<List<MemberResDto>> memberList(){
         return Response.success(memberService.memberList());
     }
+
+    @GetMapping("/verification")
+    public Response<List<MemberResDto>> verifiedMemberList(){
+        return Response.success(memberService.verifiedMemberList());
+    }
 }

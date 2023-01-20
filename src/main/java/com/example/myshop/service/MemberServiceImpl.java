@@ -49,20 +49,6 @@ public class MemberServiceImpl implements MemberService{
     }
 
     public List<MemberResDto> memberList(){
-        // 반환형이 MemberResDto.MemberResDtoBuilder 일 때 다음과 같은 에러가 발생함
-        // No serializer found for class com.example.myshop.controller.dto.response.MemberResDto$MemberResDtoBuilder 
-        // and no properties discovered to create BeanSerializer (to avoid exception, disable SerializationFeature.FAIL_ON_EMPTY_BEANS) 
-        // (through reference chain: com.example.myshop.controller.dto.response.Response["result"]->java.util.ArrayList[0])
-        /*List<MemberResDto.MemberResDtoBuilder> memberResDtoBuilders = new ArrayList<>();
-        List<Member> memberList = memberRepository.findAll();
-        for(Member member : memberList){
-            memberResDtoBuilders.add(MemberResDto.builder()
-                    .name(member.getName())
-                    .verified(member.getVerified())
-                    .address(member.getAddress()));
-        }
-        return memberResDtoBuilders;*/
-
         List<Member> members = memberRepository.findAll();
         List<MemberResDto> memberResDtoList = new ArrayList<>();
 
@@ -80,10 +66,27 @@ public class MemberServiceImpl implements MemberService{
         memberResDtoList = members.stream()
                 .map(member -> new MemberResDto(member.getName(), member.getVerified(), member.getAddress()))
                 .collect(Collectors.toList());
-        /*memberResDtoList = members.stream()
-                .map(MemberResDto.builder()
-                        .name())
-                .collect(Collectors.toList());*/
+
         return memberResDtoList;
     }
+
+    public List<MemberResDto> verifiedMemberList(){
+        // 1. Spring Data JPA로 조회하기
+        /*List<Member> members = memberRepository.findAllByVerifiedTrue();
+        List<MemberResDto> memberResDtoList = new ArrayList<>();
+
+        memberResDtoList = members.stream()
+                .map(member -> new MemberResDto(member.getName(), member.getVerified(), member.getAddress()))
+                .collect(Collectors.toList());*/
+        List<Member> members = memberRepository.findAll();
+        List<MemberResDto> memberResDtoList = new ArrayList<>();
+
+        memberResDtoList = members.stream()
+                .filter(member -> member.getVerified())
+                .map(member -> new MemberResDto(member.getName(), member.getVerified(), member.getAddress()))
+                .collect(Collectors.toList());
+
+        return memberResDtoList;
+    }
+
 }

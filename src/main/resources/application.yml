@@ -10,11 +10,11 @@ spring:
   jpa:
     hibernate.dialect: org.hibernate.dialect.PostgreSQLdialect
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     properties:
       hibernate:
         format_sql: true
     database: postgresql
 
 logging.level:
-  org.hibernate.sql: debug # console\uC560 \uB0A8\uAE30\uC9C0 \uC54A\uACE0 log \uD30C\uC77C\uC5D0 \uB0A8\uAE34\uB2E4.
+  org.hibernate.sql: debug # console에 남기지 않고 log파일에 남긴다.
