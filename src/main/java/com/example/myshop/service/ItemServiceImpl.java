@@ -11,6 +11,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 public class ItemServiceImpl implements ItemService{
@@ -48,5 +52,24 @@ public class ItemServiceImpl implements ItemService{
         // Mapstruct 적용방식
 //        Item item = itemRepository.save(itemReqMapper.toEntity(reqDto));
 //        return itemResMapper.toDto(item);
+    }
+
+    public ItemResDto getItem(Long itemId){
+        Item item = itemRepository.findById(itemId).orElseThrow(
+                () -> new MyShopApplicationException(ErrorCode.ITEM_NOT_FOUND,
+                        String.format("%s is not founded" ,itemId ))
+        );
+        ItemResDto itemResDto = new ItemResDto(item);
+        return itemResDto;
+    }
+
+    public List<ItemResDto> getItemList(){
+        List<Item> items = itemRepository.findAll();
+        List<ItemResDto> itemResDtoList = new ArrayList<>();
+
+        itemResDtoList = items.stream()
+                .map(item -> new ItemResDto(item.getName(), item.getPrice(), item.getStockQuantity()))
+                .collect(Collectors.toList());
+        return itemResDtoList;
     }
 }

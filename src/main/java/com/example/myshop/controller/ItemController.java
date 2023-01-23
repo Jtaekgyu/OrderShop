@@ -5,10 +5,9 @@ import com.example.myshop.controller.dto.response.ItemResDto;
 import com.example.myshop.controller.dto.response.Response;
 import com.example.myshop.service.ItemService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -21,5 +20,15 @@ public class ItemController {
     public Response<ItemResDto> create(@RequestBody ItemReqDto reqDto){
         ItemResDto resDto = itemService.create(reqDto);
         return Response.success(resDto);
+    }
+    
+    @GetMapping("/{itemId}") // 특정상품 조회(itemId에 맞는 item조회)
+    public Response<ItemResDto> getItem(@PathVariable("itemId") Long itemId){
+        return Response.success(itemService.getItem(itemId));
+    }
+
+    @GetMapping // 상품 목록 조회
+    public Response<List<ItemResDto>> getItemList(){
+        return Response.success(itemService.getItemList());
     }
 }
