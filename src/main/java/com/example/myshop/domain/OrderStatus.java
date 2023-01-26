@@ -4,7 +4,7 @@ public enum OrderStatus {
 
     CREATED,
     IN_PROGRESS,
-    EEROR,
+    ERROR,
     PROCESSED,
     CANCLE
 

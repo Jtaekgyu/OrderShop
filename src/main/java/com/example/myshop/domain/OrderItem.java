@@ -32,13 +32,32 @@ public class OrderItem {
     private Integer count;
 
     // 생성 메서드
+    // 도메인 모델 패턴 사용 ( DDD: Domain Driven Design 사용) : 엔티티(Entity)가 비즈니스 로직을 가지고 객체 지향의 특성을 적극 활용하는 것
     public static OrderItem createOrderItem(Item item, Integer orderPrice, Integer count){
         OrderItem orderItem = new OrderItem();
         orderItem.setItem(item);
         orderItem.setOrderPrice(orderPrice);
         orderItem.setCount(count);
+//        OrderItem orderItem = OrderItem.builder()
+//                    .item(item)
+//                    .orderPrice(orderPrice)
+//                    .count(count)
+//                    .build();
 
         item.removeStock(count);
         return orderItem;
     }
+
+    @Builder
+    public OrderItem(Item item, Order order, Integer orderPrice, Integer count){
+        this.item = item;
+        this.order = order;
+        this.orderPrice = orderPrice;
+        this.count = count;
+    }
+
+    public long getTotalPrice(){
+        return this.orderPrice * this.count;
+    }
+
 }

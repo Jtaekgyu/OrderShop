@@ -2,7 +2,6 @@ package com.example.myshop.service;
 
 import com.example.myshop.controller.dto.request.OrderReqDto;
 import com.example.myshop.controller.dto.response.OrderResDto;
-import com.example.myshop.domain.Member;
 
 import java.util.List;
 

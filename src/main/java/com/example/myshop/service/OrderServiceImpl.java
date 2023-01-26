@@ -2,11 +2,8 @@ package com.example.myshop.service;
 
 import com.example.myshop.controller.dto.request.OrderReqDto;
 import com.example.myshop.controller.dto.response.OrderResDto;
-import com.example.myshop.domain.Delivery;
+import com.example.myshop.domain.*;
 import com.example.myshop.domain.Item.Item;
-import com.example.myshop.domain.Member;
-import com.example.myshop.domain.Order;
-import com.example.myshop.domain.OrderItem;
 import com.example.myshop.domain.mapper.OrderReqMapper;
 import com.example.myshop.domain.mapper.OrderResMapper;
 import com.example.myshop.exception.ErrorCode;
@@ -50,10 +47,11 @@ public class OrderServiceImpl implements OrderService{
         OrderItem orderItem = OrderItem.createOrderItem(item, item.getPrice(), reqDto.getCount());
         // 주문 생성
         Order order = Order.createOrder(member, delivery, orderItem);
+        // 여기 orderProcessStep 추가하자?
 
         orderRepository.save(order);
         OrderResDto orderResDto = new OrderResDto(member.getName(), order.getStatus(),
-                member.getAddress(), order.getCreatedAt(), order.getModifiedAt());
+                member.getAddress(), order.getOrderTotalPrice(), order.getCreatedAt(), order.getModifiedAt());
         return orderResDto;
         // MapStruct 방법
 //        Order order = orderRepository.save(orderReqMapper.toEntity(reqDto));
@@ -64,7 +62,7 @@ public class OrderServiceImpl implements OrderService{
         List<Order> orderList = orderRepository.findAllByMemberId(memberId);
         List<OrderResDto> orderResDtoList = orderList.stream()
                 .map(order -> new OrderResDto(order.getMember().getName(), order.getStatus(),
-                        order.getMember().getAddress(), order.getCreatedAt(), order.getModifiedAt()))
+                        order.getMember().getAddress(), order.getOrderTotalPrice(), order.getCreatedAt(), order.getModifiedAt()))
                 .collect(Collectors.toList());
 
         return orderResDtoList;

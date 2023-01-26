@@ -1,5 +1,9 @@
 package com.example.myshop.domain;
 
+import com.example.myshop.exception.ErrorCode;
+import com.example.myshop.exception.MyShopApplicationException;
+import com.example.myshop.service.OrderProcessStep;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -32,26 +36,112 @@ public class Order extends TimeStamped{
     // Order만 persist하면 Delivery 까지 persist 된다. 물론 ALL이기 때문에 다른 조건들도 적용된다.
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Delivery delivery;
-
-
+    
     // 참고로 Enumerated 타입은 Enum타입의 변수에 적용할 수 있다.
     @Enumerated(EnumType.STRING) // 만약에 EnumType 이 ORDINAL 이면 새로운 타입이 추가 되면 숫자가 꼬여서 반드시 STRING으로 해야한다.
     private OrderStatus status;
+
+    private long orderTotalPrice;
+
+    @Builder
+    public Order (Member member, Delivery delivery, OrderStatus status, List<OrderItem> orderItems){
+        this.member = member;
+        this.delivery = delivery;
+        this.status = status;
+        this.orderItems = orderItems;
+    }
 
     public void addOrderItem(OrderItem orderItem){
         orderItems.add(orderItem);
         orderItem.setOrder(this);
     }
 
+    // 도메인 모델 패턴 사용
+    // ( DDD: Domain Driven Design 사용) : 엔티티(Entity)가 비즈니스 로직을 가지고 객체 지향의 특성을 적극 활용하는 것
     public static Order createOrder(Member member, Delivery delivery, OrderItem... orderItems){
         // 참고로 ...(가변인자)은 여러개의 매개변수를 받을 수 있다는 말이다.
         Order order = new Order();
         order.setMember(member);
         order.setDelivery(delivery);
         for (OrderItem orderItem : orderItems){
+            // 추가
+            order.orderTotalPrice += orderItem.getTotalPrice();
             order.addOrderItem(orderItem);
         }
         order.setStatus(OrderStatus.CREATED);
+
+        /*Order order = Order.builder()
+                .member(member)
+                .delivery(delivery)
+                .status(OrderStatus.CREATED)
+                .build();
+        for (OrderItem orderItem : orderItems){
+            order.addOrderItem(orderItem);
+        }*/
+        order.orderProcessStepMethod(order);
+
         return order;
+    }
+    public void orderProcessStepMethod(Order order){
+        // tmpOrder는 onsumer<Order> 타입으로 받기 때문에 ops.getStatus() 같은게 가능하다.
+        OrderProcessStep initializeStep = new OrderProcessStep(tmpOrder -> {
+            if(tmpOrder.getStatus() == OrderStatus.CREATED) {
+                System.out.println("Start processing order " + tmpOrder.getId());
+                tmpOrder.setStatus(OrderStatus.IN_PROGRESS);
+            }
+        });
+
+        // totalPrice가 맞는지 체크한다.
+        OrderProcessStep totalPriceCheck = new OrderProcessStep(tmpOrder ->{
+            if(tmpOrder.getStatus() == OrderStatus.IN_PROGRESS) {
+                System.out.println("Checking orderTotalPrice " + tmpOrder.getId());
+                if(tmpOrder.getOrderTotalPrice() < 0 )
+                    tmpOrder.setStatus(OrderStatus.ERROR);
+            }
+        });
+
+        // 검증된 유저인지 체크한다.
+        OrderProcessStep verifyOrderStep = new OrderProcessStep(tmpOrder -> {
+            if(tmpOrder.getStatus() == OrderStatus.IN_PROGRESS) {
+                System.out.println("Verifying order " + tmpOrder.getId());
+                if(!tmpOrder.getMember().getVerified()) // 검증된 유저가 아니면
+                    tmpOrder.setStatus(OrderStatus.ERROR); // 에러발생
+            }
+        });
+
+        // ERROR상태인 ORDER를 handle해주는 step
+        OrderProcessStep handleErrorStep = new OrderProcessStep(tmpOrder -> {
+            if (tmpOrder.getStatus() == OrderStatus.ERROR) {
+                System.out.println("Sending out 'Failed to process order' alert for order " + tmpOrder.getId());
+                throw new MyShopApplicationException(ErrorCode.ERROR_OCCUR,
+                        String.format("%s is Error Occured", tmpOrder.getMember()));
+            }
+        });
+
+        // IN_PROGRESS를 PROCESSED상태로 변환해 주는 스텝
+        OrderProcessStep processedStep = new OrderProcessStep(tmpOrder -> {
+            if(tmpOrder.getStatus() == OrderStatus.IN_PROGRESS) {
+                System.out.println("Processed Step " + tmpOrder.getId());
+                tmpOrder.setStatus(OrderStatus.PROCESSED);
+            }
+        });
+
+        // order 완료 step
+        OrderProcessStep completeProcessingOrderStep = new OrderProcessStep(tmpOrder -> {
+            if(tmpOrder.getStatus() == OrderStatus.PROCESSED) {
+                System.out.println("Finished processing order " + tmpOrder.getId());
+                // 이곳에서 추가적으로 작업을 진행 할 수 있다. ex) 사용자에게 명세서 이메일을 보낸다든가
+            }
+        });
+
+        // chain으로 엮어서 워크플로우를 만듦 , 각 스텝은 자기가 프로세스할 수 있는것만 프로세스하기 때문에
+        OrderProcessStep chainedOrderProcessSteps = initializeStep
+                .setNext(totalPriceCheck)
+                .setNext(verifyOrderStep)
+                .setNext(handleErrorStep)
+                .setNext(processedStep) // error스텝이 들어가 있어도 order가 error상태가 아니면 스킵한다.
+                .setNext(completeProcessingOrderStep);
+
+        chainedOrderProcessSteps.process(order);
     }
 }

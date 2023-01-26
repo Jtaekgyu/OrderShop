@@ -13,7 +13,8 @@ ErrorCode {
     DUPLICATED_ITEM_NAME(HttpStatus.CONFLICT, "Item name is duplicated"),
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND,"Member not founded"),
     ITEM_NOT_FOUND(HttpStatus.NOT_FOUND,"Item not founded"),
-    NOT_ENOUGH_STOCK(HttpStatus.CONFLICT, "Out of Stock");
+    NOT_ENOUGH_STOCK(HttpStatus.CONFLICT, "Out of Stock"),
+    ERROR_OCCUR(HttpStatus.CONFLICT, "Error Occured");
 
     private HttpStatus status;
     private String message;
