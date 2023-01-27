@@ -25,11 +25,11 @@ public class Order extends TimeStamped{
     @JoinColumn(name = "member_id") //★ 외래키가 있는 주인 쪽에서 상대방한테 @JoinColumn을 건다
     private Member member;
 
-    // ★★★ 참고로 CascadeType.ALL을 사용할 수 있는 이유는
+    // ★★★ 참고로 CascadeType.ALL을 사용할 수 있는 이유는 (상위 엔터티에서 하위 엔터티로 모든 작업을 전파한다)
     // 1. Order만 OrderItem과 Delivery을  참조해서 쓰기 때문이다. 즉, Order만 OrderItem, Delivery를 관리하기 때문이다.
     // 물론 OrderItem과 Delivery가 다른 것을 참조할 수 있지만 Order를 제외한 다른 곳에서 OrderItem과 Delivery를 참조하는 곳이 없다.
-    // 2. Order와 OrderItem의 persist 라이프 사이클이 똑같기 때문이다.
-    // 이럴 때만 CascadeType을 사용하면 된다.
+    // 2. Order와 OrderItem, Delivery의 persist 라이프 사이클이 똑같기 때문이다.
+    // 이럴 때만 CascadeType.ALL 을 사용하면 된다.
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     List<OrderItem> orderItems = new ArrayList<>();
 
@@ -59,7 +59,7 @@ public class Order extends TimeStamped{
     // 도메인 모델 패턴 사용
     // ( DDD: Domain Driven Design 사용) : 엔티티(Entity)가 비즈니스 로직을 가지고 객체 지향의 특성을 적극 활용하는 것
     public static Order createOrder(Member member, Delivery delivery, OrderItem... orderItems){
-        // 참고로 ...(가변인자)은 여러개의 매개변수를 받을 수 있다는 말이다.
+        // 참고로 ...(가변인자)은 말 그대로 인자의 개수가 변한다.
         Order order = new Order();
         order.setMember(member);
         order.setDelivery(delivery);
@@ -69,19 +69,25 @@ public class Order extends TimeStamped{
             order.addOrderItem(orderItem);
         }
         order.setStatus(OrderStatus.CREATED);
-
-        /*Order order = Order.builder()
-                .member(member)
-                .delivery(delivery)
-                .status(OrderStatus.CREATED)
-                .build();
-        for (OrderItem orderItem : orderItems){
-            order.addOrderItem(orderItem);
-        }*/
         order.orderProcessStepMethod(order);
 
         return order;
     }
+
+    /*public static Order createOrder2(List<OrderItem> orderItems){
+        Order order = new Order();
+        for(OrderItem orderItem: orderItems){
+            order.setMember(orderItem.getOrder().getMember());
+            order.setDelivery(orderItem.getOrder().getDelivery());
+            order.orderTotalPrice += orderItem.getTotalPrice();
+            order.addOrderItem(orderItem);
+            order.setStatus(OrderStatus.CREATED);
+            order.orderProcessStepMethod(order);
+        }
+        return order;
+    }*/
+
+
     public void orderProcessStepMethod(Order order){
         // tmpOrder는 onsumer<Order> 타입으로 받기 때문에 ops.getStatus() 같은게 가능하다.
         OrderProcessStep initializeStep = new OrderProcessStep(tmpOrder -> {
@@ -109,12 +115,13 @@ public class Order extends TimeStamped{
             }
         });
 
-        // ERROR상태인 ORDER를 handle해주는 step
+        // ERROR상태인 ORDER를 handle해주는 step , ERROR throw 하지말고 흘러보내자
         OrderProcessStep handleErrorStep = new OrderProcessStep(tmpOrder -> {
             if (tmpOrder.getStatus() == OrderStatus.ERROR) {
                 System.out.println("Sending out 'Failed to process order' alert for order " + tmpOrder.getId());
-                throw new MyShopApplicationException(ErrorCode.ERROR_OCCUR,
-                        String.format("%s is Error Occured", tmpOrder.getMember()));
+                return;
+                //                throw new MyShopApplicationException(ErrorCode.ERROR_OCCUR,
+//                        String.format("%s is Error Occured", tmpOrder.getMember()));
             }
         });
 

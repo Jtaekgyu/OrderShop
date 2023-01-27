@@ -6,5 +6,5 @@ import lombok.Getter;
 public class OrderReqDto {
     private Long memberId;
     private Long itemId;
-    private Integer count;
+    private Integer quantity;
 }
