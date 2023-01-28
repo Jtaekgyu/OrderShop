@@ -6,7 +6,7 @@ import lombok.Getter;
 public class MyOrderReqDto {
 
     private Integer minutes;
-    private long totalPrice;
+    private Long totalPrice;
     private Long memberID;
 
 }

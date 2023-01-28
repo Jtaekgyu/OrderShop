@@ -53,12 +53,15 @@ public class OrderServiceImpl implements OrderService{
         OrderItem orderItem = OrderItem.createOrderItem(item, item.getPrice(), reqDto.getQuantity());
         // 주문 생성
         Order order = Order.createOrder(member, delivery, orderItem);
+
+        if (order.getStatus() == OrderStatus.ERROR){
+            item.preserveStock(reqDto.getQuantity());
+            // ERROR이면 감소로직이 생성이 안되게 해버림
+//            orderRepository.flush();
+        }
+
         orderRepository.save(order);
 
-        /*if (order.getStatus() == OrderStatus.ERROR){
-            System.out.println("~~~~ flush 발동");
-            orderRepository.flush();
-        }*/
 
         OrderResDto orderResDto = new OrderResDto(member.getName(), order.getStatus(),
                 member.getAddress(), order.getOrderTotalPrice(), order.getCreatedAt(), order.getModifiedAt());
@@ -121,10 +124,8 @@ public class OrderServiceImpl implements OrderService{
                 .collect(Collectors.toList());
         return orderResDtoList;
     }
-    
     public Long myOrderList2(MyOrderReqDto reqDto){
         List<Order> orderList = orderRepository.findAllByMemberId(reqDto.getMemberID());
-
         // n분 이내 주문한거의
         // order들의 TotalPrice 총합을 구함
         Long maxOrderPrice = orderList.stream()
@@ -136,4 +137,50 @@ public class OrderServiceImpl implements OrderService{
 
         return maxOrderPrice;
     }
+    public long sequantialStream(MyOrderReqDto reqDto){
+        long startTime;
+        long endTime;
+        List<Order> orderList = orderRepository.findAllByMemberId(reqDto.getMemberID());
+
+        startTime = System.nanoTime();
+        orderList.stream()
+                .filter(order -> order.getStatus() == OrderStatus.PROCESSED)
+                .filter(order -> order.getMember().getVerified() == true) //검증안된 유저의 주문은 어차피 PROCESSED가 아니다.
+                .filter(order -> order.getCreatedAt().isAfter(LocalDateTime.now().minusMinutes(reqDto.getMinutes())))
+                .filter(order -> order.getOrderTotalPrice() >= reqDto.getTotalPrice())
+                .sorted((o1, o2) -> o1.getDelivery().getAddress().getCity().compareTo(o2.getDelivery().getAddress().getCity()))
+                .map(order -> new OrderResDto(order.getMember().getName(), order.getStatus(), order.getMember().getAddress(),
+                        order.getOrderTotalPrice(), order.getCreatedAt(), order.getModifiedAt()))
+                .forEach(this::wasteOfTime);
+        endTime = System.nanoTime();
+        return endTime - startTime;
+    }
+
+    public long parallelStream(MyOrderReqDto reqDto){
+        long startTime;
+        long endTime;
+        List<Order> orderList = orderRepository.findAllByMemberId(reqDto.getMemberID());
+
+        startTime = System.nanoTime();
+        orderList.stream().parallel()
+                .filter(order -> order.getStatus() == OrderStatus.PROCESSED)
+                .filter(order -> order.getMember().getVerified() == true) //검증안된 유저의 주문은 어차피 PROCESSED가 아니다.
+                .filter(order -> order.getCreatedAt().isAfter(LocalDateTime.now().minusMinutes(reqDto.getMinutes())))
+                .filter(order -> order.getOrderTotalPrice() >= reqDto.getTotalPrice())
+                .sorted((o1, o2) -> o1.getDelivery().getAddress().getCity().compareTo(o2.getDelivery().getAddress().getCity()))
+                .map(order -> new OrderResDto(order.getMember().getName(), order.getStatus(), order.getMember().getAddress(),
+                        order.getOrderTotalPrice(), order.getCreatedAt(), order.getModifiedAt()))
+                .forEach(this::wasteOfTime);
+        endTime = System.nanoTime();
+        return endTime - startTime;
+    }
+
+    public void wasteOfTime(OrderResDto resDto){
+        try {
+            Thread.sleep(3);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }

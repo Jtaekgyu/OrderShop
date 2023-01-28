@@ -119,7 +119,6 @@ public class Order extends TimeStamped{
         OrderProcessStep handleErrorStep = new OrderProcessStep(tmpOrder -> {
             if (tmpOrder.getStatus() == OrderStatus.ERROR) {
                 System.out.println("Sending out 'Failed to process order' alert for order " + tmpOrder.getId());
-                return;
                 //                throw new MyShopApplicationException(ErrorCode.ERROR_OCCUR,
 //                        String.format("%s is Error Occured", tmpOrder.getMember()));
             }

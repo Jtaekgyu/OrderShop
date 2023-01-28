@@ -3,7 +3,6 @@ package com.example.myshop.domain.Item;
 import com.example.myshop.exception.ErrorCode;
 import com.example.myshop.exception.MyShopApplicationException;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -36,8 +35,13 @@ public abstract class Item {
     public void removeStock(Integer quantity) {
         Integer restStock = this.stockQuantity - quantity;
         if(restStock < 0) {
-            throw new MyShopApplicationException(ErrorCode.NOT_ENOUGH_STOCK, String.format("Out of Stock2"));
+            throw new MyShopApplicationException(ErrorCode.NOT_ENOUGH_STOCK, String.format("Out of Stock"));
         }
+        this.stockQuantity = restStock;
+    }
+
+    public void preserveStock(Integer quantity) {
+        Integer restStock = this.stockQuantity + quantity;
         this.stockQuantity = restStock;
     }
 }

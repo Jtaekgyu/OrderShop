@@ -42,4 +42,13 @@ public class OrderController {
         return Response.success(orderService.myOrderList2(reqDto));
     }
 
+    @GetMapping("/sequantial")
+    public Response<Long> sequantialStream(@RequestBody MyOrderReqDto reqDto){
+        return Response.success(orderService.sequantialStream(reqDto));
+    }
+
+    @GetMapping("/parallel")
+    public Response<Long> parallelStream(@RequestBody MyOrderReqDto reqDto){
+        return Response.success(orderService.parallelStream(reqDto));
+    }
 }

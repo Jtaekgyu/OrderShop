@@ -31,6 +31,14 @@ public class OrderItem {
 
     private Integer quantity;
 
+    @Builder
+    public OrderItem(Item item, Order order, Integer orderPrice, Integer quantity){
+        this.item = item;
+        this.order = order;
+        this.orderPrice = orderPrice;
+        this.quantity = quantity;
+    }
+
     // 생성 메서드
     // 도메인 모델 패턴 사용 ( DDD: Domain Driven Design 사용) : 엔티티(Entity)가 비즈니스 로직을 가지고 객체 지향의 특성을 적극 활용하는 것
     public static OrderItem createOrderItem(Item item, Integer orderPrice, Integer quantity){
@@ -42,14 +50,6 @@ public class OrderItem {
 
         item.removeStock(quantity);
         return orderItem;
-    }
-
-    @Builder
-    public OrderItem(Item item, Order order, Integer orderPrice, Integer quantity){
-        this.item = item;
-        this.order = order;
-        this.orderPrice = orderPrice;
-        this.quantity = quantity;
     }
 
     public long getTotalPrice(){
