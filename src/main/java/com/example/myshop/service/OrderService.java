@@ -12,7 +12,9 @@ public interface OrderService {
     List<OrderResDto> memberOrderList(Long id);
     List<OrderResDto> myOrderList1(MyOrderReqDto reqDto);
     Long myOrderList2(MyOrderReqDto reqDto);
+    List<String> myOrderList3();
     long sequantialStream(MyOrderReqDto reqDto);
     long parallelStream(MyOrderReqDto reqDto);
     void wasteOfTime(OrderResDto resDto);
+    long parallelSequantialTest1();
 }

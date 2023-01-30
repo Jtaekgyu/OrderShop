@@ -1,7 +1,6 @@
 package com.example.myshop.domain.mapper;
 
 import com.example.myshop.controller.dto.request.MemberJoinReqDto;
-import com.example.myshop.domain.Address;
 import com.example.myshop.domain.Member;
 import org.mapstruct.Mapper;
 

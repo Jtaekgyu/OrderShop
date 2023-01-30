@@ -19,8 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -59,9 +57,7 @@ public class OrderServiceImpl implements OrderService{
             // ERROR이면 감소로직이 생성이 안되게 해버림
 //            orderRepository.flush();
         }
-
         orderRepository.save(order);
-
 
         OrderResDto orderResDto = new OrderResDto(member.getName(), order.getStatus(),
                 member.getAddress(), order.getOrderTotalPrice(), order.getCreatedAt(), order.getModifiedAt());
@@ -109,6 +105,8 @@ public class OrderServiceImpl implements OrderService{
     public List<OrderResDto> myOrderList1(MyOrderReqDto reqDto){
         List<Order> orderList = orderRepository.findAllByMemberId(reqDto.getMemberID());
 //        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
+        // 원본 데이터를 변경하지 않음
+
         // 주문이 성공하고(OrderStatus.PROCESSED)
         // 검증된 유저인지
         // reqDto.getMinutes()분 이내 주문한거
@@ -124,10 +122,13 @@ public class OrderServiceImpl implements OrderService{
                 .collect(Collectors.toList());
         return orderResDtoList;
     }
+
     public Long myOrderList2(MyOrderReqDto reqDto){
         List<Order> orderList = orderRepository.findAllByMemberId(reqDto.getMemberID());
+        // 주문이 성공하고(OrderStatus.PROCESSED)
+        // 검증된 유저인지
         // n분 이내 주문한거의
-        // order들의 TotalPrice 총합을 구함
+        // order들의 TotalPrice 총합을 구함(reduce 사용)
         Long maxOrderPrice = orderList.stream()
                 .filter(order -> order.getStatus() == OrderStatus.PROCESSED)
                 .filter(order -> order.getMember().getVerified() == true) //검증안된 유저의 주문은 어차피 PROCESSED가 아니다.
@@ -137,6 +138,22 @@ public class OrderServiceImpl implements OrderService{
 
         return maxOrderPrice;
     }
+
+    public List<String> myOrderList3(){
+        List<Order> orderList = orderRepository.findAll();
+
+        // 주문한 유저의 이름만 걸러낸다.
+        List<String> orderMemberName = orderList.stream()
+                .filter(order -> order.getStatus() == OrderStatus.PROCESSED)
+                .filter(order -> order.getMember().getVerified() == true)
+                .map(order -> order.getMember().getName())
+                .distinct() // 안하면 List -> Set -> List로 바꿔야하는 번거로움
+                .sorted((o1, o2) -> o1.compareTo(o2))
+                .collect(Collectors.toList());
+
+        return orderMemberName;
+    }
+
     public long sequantialStream(MyOrderReqDto reqDto){
         long startTime;
         long endTime;
@@ -183,4 +200,22 @@ public class OrderServiceImpl implements OrderService{
         }
     }
 
+    public long parallelSequantialTest1(){
+        long startTime;
+        long endTime;
+        List<Order> orderList = orderRepository.findAllByMemberId(3L);
+
+        startTime = System.nanoTime();
+        orderList.stream().parallel()
+                .filter(order -> order.getStatus() == OrderStatus.PROCESSED)
+                .filter(order -> order.getMember().getVerified() == true) //검증안된 유저의 주문은 어차피 PROCESSED가 아니다.
+                .filter(order -> order.getCreatedAt().isAfter(LocalDateTime.now().minusMinutes(100000)))
+                .filter(order -> order.getOrderTotalPrice() >= 1)
+                .sorted((o1, o2) -> o1.getDelivery().getAddress().getCity().compareTo(o2.getDelivery().getAddress().getCity()))
+                .map(order -> new OrderResDto(order.getMember().getName(), order.getStatus(), order.getMember().getAddress(),
+                        order.getOrderTotalPrice(), order.getCreatedAt(), order.getModifiedAt()));
+//                .forEach(this::wasteOfTime);
+        endTime = System.nanoTime();
+        return endTime - startTime;
+    }
 }

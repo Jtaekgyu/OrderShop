@@ -92,7 +92,7 @@ public class Order extends TimeStamped{
         // tmpOrder는 onsumer<Order> 타입으로 받기 때문에 ops.getStatus() 같은게 가능하다.
         OrderProcessStep initializeStep = new OrderProcessStep(tmpOrder -> {
             if(tmpOrder.getStatus() == OrderStatus.CREATED) {
-                System.out.println("Start processing order " + tmpOrder.getId());
+                System.out.println("Start processing order ");
                 tmpOrder.setStatus(OrderStatus.IN_PROGRESS);
             }
         });
@@ -100,8 +100,8 @@ public class Order extends TimeStamped{
         // totalPrice가 맞는지 체크한다.
         OrderProcessStep totalPriceCheck = new OrderProcessStep(tmpOrder ->{
             if(tmpOrder.getStatus() == OrderStatus.IN_PROGRESS) {
-                System.out.println("Checking orderTotalPrice " + tmpOrder.getId());
-                if(tmpOrder.getOrderTotalPrice() < 0 )
+                System.out.println("Checking orderTotalPrice ");
+                if(tmpOrder.getOrderTotalPrice() <= 0 )
                     tmpOrder.setStatus(OrderStatus.ERROR);
             }
         });
@@ -109,7 +109,7 @@ public class Order extends TimeStamped{
         // 검증된 유저인지 체크한다.
         OrderProcessStep verifyOrderStep = new OrderProcessStep(tmpOrder -> {
             if(tmpOrder.getStatus() == OrderStatus.IN_PROGRESS) {
-                System.out.println("Verifying order " + tmpOrder.getId());
+                System.out.println("Verifying order ");
                 if(!tmpOrder.getMember().getVerified()) // 검증된 유저가 아니면
                     tmpOrder.setStatus(OrderStatus.ERROR); // 에러발생
             }
@@ -118,7 +118,7 @@ public class Order extends TimeStamped{
         // ERROR상태인 ORDER를 handle해주는 step , ERROR throw 하지말고 흘러보내자
         OrderProcessStep handleErrorStep = new OrderProcessStep(tmpOrder -> {
             if (tmpOrder.getStatus() == OrderStatus.ERROR) {
-                System.out.println("Sending out 'Failed to process order' alert for order " + tmpOrder.getId());
+                System.out.println("Sending out 'Failed to process order' alert for order ");
                 //                throw new MyShopApplicationException(ErrorCode.ERROR_OCCUR,
 //                        String.format("%s is Error Occured", tmpOrder.getMember()));
             }
@@ -127,7 +127,7 @@ public class Order extends TimeStamped{
         // IN_PROGRESS를 PROCESSED상태로 변환해 주는 스텝
         OrderProcessStep processedStep = new OrderProcessStep(tmpOrder -> {
             if(tmpOrder.getStatus() == OrderStatus.IN_PROGRESS) {
-                System.out.println("Processed Step " + tmpOrder.getId());
+                System.out.println("Processed Step ");
                 tmpOrder.setStatus(OrderStatus.PROCESSED);
             }
         });
@@ -135,19 +135,21 @@ public class Order extends TimeStamped{
         // order 완료 step
         OrderProcessStep completeProcessingOrderStep = new OrderProcessStep(tmpOrder -> {
             if(tmpOrder.getStatus() == OrderStatus.PROCESSED) {
-                System.out.println("Finished processing order " + tmpOrder.getId());
+                System.out.println("Finished processing order ");
                 // 이곳에서 추가적으로 작업을 진행 할 수 있다. ex) 사용자에게 명세서 이메일을 보낸다든가
             }
         });
 
         // chain으로 엮어서 워크플로우를 만듦 , 각 스텝은 자기가 프로세스할 수 있는것만 프로세스하기 때문에
+        // error스텝이 들어가 있어도 order가 error상태가 아니면 스킵한다.
         OrderProcessStep chainedOrderProcessSteps = initializeStep
                 .setNext(totalPriceCheck)
                 .setNext(verifyOrderStep)
                 .setNext(handleErrorStep)
-                .setNext(processedStep) // error스텝이 들어가 있어도 order가 error상태가 아니면 스킵한다.
+                .setNext(processedStep)
                 .setNext(completeProcessingOrderStep);
 
+        // process로 실행을 해준다.
         chainedOrderProcessSteps.process(order);
     }
 }

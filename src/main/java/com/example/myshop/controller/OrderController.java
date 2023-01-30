@@ -42,6 +42,11 @@ public class OrderController {
         return Response.success(orderService.myOrderList2(reqDto));
     }
 
+    @GetMapping("/my3")
+    public Response<List<String>> myOrderList3(){
+        return Response.success(orderService.myOrderList3());
+    }
+
     @GetMapping("/sequantial")
     public Response<Long> sequantialStream(@RequestBody MyOrderReqDto reqDto){
         return Response.success(orderService.sequantialStream(reqDto));
@@ -50,5 +55,10 @@ public class OrderController {
     @GetMapping("/parallel")
     public Response<Long> parallelStream(@RequestBody MyOrderReqDto reqDto){
         return Response.success(orderService.parallelStream(reqDto));
+    }
+
+    @GetMapping("/jmeter-test1")
+    public Response<Long> parallelSequantialTest1(){
+        return Response.success(orderService.parallelSequantialTest1());
     }
 }

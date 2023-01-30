@@ -2,8 +2,6 @@ package com.example.myshop.service;
 
 import com.example.myshop.controller.dto.request.MemberJoinReqDto;
 import com.example.myshop.controller.dto.response.MemberResDto;
-import com.example.myshop.controller.dto.response.Response;
-import com.example.myshop.domain.Address;
 import com.example.myshop.domain.Member;
 import com.example.myshop.domain.mapper.MemberReqMapper;
 import com.example.myshop.domain.mapper.MemberResMapper;
@@ -11,7 +9,6 @@ import com.example.myshop.exception.ErrorCode;
 import com.example.myshop.exception.MyShopApplicationException;
 import com.example.myshop.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
-import org.apache.catalina.User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
